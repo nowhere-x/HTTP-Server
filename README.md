@@ -1,6 +1,6 @@
 # HTTP Server Repo for DS Lab1
-To run/start the server, enter into terminal: go run http-server.go \n
-To specify which port to use, enter "-port <port number>" into the command line when starting the server \n
+To run/start the server, enter into terminal: go run http-server.go 
+To specify which port to use, enter "-port <port number>" into the command line when starting the server
 To use the POST method, enter "curl.exe -X POST -F "file=@<filepath/name>" http://localhost:<port>/<outputfilename> into the command line
 To use the GET method, enter "curl.exe -X GET http://localhost:<port>/<path_to_file> -o <outfilename/path_to_outputfile>
 
