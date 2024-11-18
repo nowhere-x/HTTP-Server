@@ -9,6 +9,12 @@ import (
 	"net/http"
 )
 
+func logAndRespond(clientConn net.Conn, logMessage string) {
+	log.Println(logMessage)
+	clientConn.Write([]byte("HTTP/1.1 501 Bad Request\r\nContent-Type: text/plain\r\n\r\n" + logMessage + "\n"))
+	clientConn.Close()
+}
+
 func main() {
 	port := flag.String("port", "9001", "port on which the proxy listen")
 	flag.Parse()
@@ -35,6 +41,7 @@ func main() {
 			err := handleClient(clientConn, nrconns)
 			if err != nil {
 				log.Println("Error: ", err)
+				logAndRespond(clientConn, fmt.Sprintf("Error handling client: %v", err))
 			}
 		}()
 	}
@@ -49,13 +56,13 @@ func handleClient(clientConn net.Conn, nrconns chan struct{}) error {
 	reader := bufio.NewReader(clientConn)
 	request, err := http.ReadRequest(reader)
 	if err != nil {
-		log.Println("Error parsing request:", err)
+		logAndRespond(clientConn, fmt.Sprintf("Error parsing request: %v", err))
 		return err
 	}
 
 	if request.Method != "GET" {
-		log.Println("Proxy only accept GET request")
-		return fmt.Errorf("METHOD %s IS NOT SUPPORTED", request.Method)
+		logAndRespond(clientConn, fmt.Sprintf("METHOD %s IS NOT SUPPORTED", request.Method))
+		return fmt.Errorf("method %s is not supported", request.Method)
 	}
 
 	return forwardRequest(clientConn, request)
@@ -63,17 +70,17 @@ func handleClient(clientConn net.Conn, nrconns chan struct{}) error {
 
 func forwardRequest(clientConn net.Conn, request *http.Request) error {
 	client := &http.Client{}
-	request.RequestURI = "" // RequestURI must be empty for client requests
+	request.RequestURI = ""
 	response, err := client.Do(request)
 	if err != nil {
-		log.Println("Failed to forward request: ", err)
+		logAndRespond(clientConn, fmt.Sprintf("Failed to forward request: %v", err))
 		return err
 	}
 	defer response.Body.Close()
 
 	// Write the response back to the client
 	if err := response.Write(clientConn); err != nil {
-		log.Println("Failed to send response to client: ", err)
+		logAndRespond(clientConn, fmt.Sprintf("Failed to send response to client: %v", err))
 		return err
 	}
 
