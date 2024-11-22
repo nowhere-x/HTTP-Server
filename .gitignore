@@ -23,3 +23,12 @@ go.work.sum
 
 # env file
 .env
+
+# ignore test files 
+*.html
+*.jpg
+*.jpeg
+*.gif
+*.txt
+*.css
+*.ab*
